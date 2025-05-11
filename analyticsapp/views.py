@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from .models import Site, Profile, Visitor, UserActivity
+from .models import Site, Profile, UserActivity
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -39,15 +39,12 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
     def get_object(self):
         return self.request.user.profile
     
-class VisitorListView(ListView):
-    model = Visitor
-    template_name = 'visitor_list.html'
 
 class ActivityListView:
     model = UserActivity
     template_name = 'activity_list.html'
 
-    
+
 
 
 
