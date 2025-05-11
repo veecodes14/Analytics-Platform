@@ -1,50 +1,41 @@
-from django.shortcuts import render
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from .models import Site, Profile, UserActivity
-from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
-
-class SiteListView(ListView):
-    model = Site
-    template_name = 'site_list.html'
-
-class SiteDetailView(DetailView):
-    model = Site
-    template_name = 'site_detail.html'
-
-class SiteCreateView(CreateView):
-    model = Site
-    fields = ['name', 'domain']
-    template_name = 'site_form.html'
-
-    def form_valid(self, form):
-        form.instance.owner = self.request.user
-        return super().form_valid(form)
-    
-class SiteUpdateView(UpdateView):
-    model = Site
-    fields = ['name', 'domain']
-    template_name = 'site_create.html'
-
-class SiteDeleteView(DeleteView):
-    model = Site
-    success_url = reverse_lazy('site_list')
-    template_name = 'site_confirm_delete'
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 
-class ProfileDetailView(LoginRequiredMixin, DetailView):
-    model = Profile
-    template_name = 'profile_detail.html'
+@api_view(['GET'])
+def get_total_visits(request):
+    site_id = request.GET.get('site')
 
-    def get_object(self):
-        return self.request.user.profile
+    if site_id:
+        total_visits = UserActivity.objects.filter(site__id=site_id).count()
+    else:
+        total_visits = UserActivity.objects.count()
+
+    return Response({'total_visits': total_visits})
     
 
-class ActivityListView:
-    model = UserActivity
-    template_name = 'activity_list.html'
+@api_view(['GET'])
+def get_total_unique_visits(request):
+    start_date = request.query_params.get('start')
+    end_date = request.query_params.get('end')
+    site_id = request.GET.get('site')
+
+    activities = UserActivity.objects.all()
+
+    if site_id:
+        activities = activities.filter(site__id=site_id)
+    if start_date:
+        activities = activities.filter(timestamp__date__gte=start_date)
+    if end_date:
+        activities = activities.filter(timestamp__date__lte=end_date)
+
+    unique_visitors = activities.values('visitor').distinct().count()
+
+    return Response({'total_unique_visits': unique_visitors})
 
 
+ 
 
 
 
